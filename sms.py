@@ -1,3 +1,5 @@
+import time
+
 import httpx
 from onlinesimru import GetNumbers
 
@@ -36,10 +38,12 @@ def get_number(attempt=0):
 def get_key(id, attempt=0):
     code = None
     try:
-        code = numbers.wait_code(id, timeout=10)
+        code = numbers.wait_code(id, timeout=60*3)
         if len(code) > 6:
             code = code[-4:]
     except Exception as e:
+        time.sleep(60*2)
+
         # if attempt < 5:
         #     return get_key(id, attempt=attempt + 1)
         print("can not get code")
