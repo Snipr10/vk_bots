@@ -108,7 +108,8 @@ async def vk_account(proxy=None):
             print("CAN NOT GET PHONE")
             return
 
-        await phone_el.type(phone_number[1:].replace("+7", ""))
+        # await phone_el.type(phone_number[1:].replace("+7", ""))
+        await phone_el.type(phone_number.replace("+7", ""))
 
         await page.click("#join_send_phone", timeout=DEFAULT_TIMEOUT)
         await page.waitForSelector("#join_code", timeout=DEFAULT_TIMEOUT)

@@ -2,21 +2,21 @@ import time
 
 import requests
 
-from utils import VAK_KEY
+from utils import SMS_5SIM_KEY
+
+HEADERS = {
+    "Accept": "application/json",
+    "Authorization": f"Bearer {SMS_5SIM_KEY}"
+}
 
 
 def get_number():
     try:
-        response = requests.get("https://vak-sms.com/api/getNumber/",
-                                params={
-                                    "apiKey": VAK_KEY,
-                                    "service": "vk",
-                                    "country": "ru",
-                                    "operator": "rostelecom"
-                                }).json()
+        response = requests.get("https://5sim.net/v1/user/buy/activation/russia/any/vkontakte",
+                                headers=HEADERS).json()
         print(response)
-        id = response["idNum"]
-        phone = str(response["tel"])
+        id = response["id"]
+        phone = str(response["phone"])
     except Exception as e:
         try:
             print(response['response'])
@@ -30,11 +30,9 @@ def get_number():
 
 
 def get_balance():
-    response = requests.get("https://vak-sms.com/api/getBalance/",
-                            params={
-                                "apiKey": VAK_KEY,
-                            }).json()
-    balance = response.get("balance")
+    balance = requests.get("https://5sim.net/v1/user/profile",
+                           headers=HEADERS
+                           ).json().get("balance", 0)
     return balance
 
 
@@ -44,42 +42,32 @@ def get_key(id, attempt=0):
         if attempt > 6:
             completed_phone(id)
             return None
-        response = requests.get("https://vak-sms.com/api/getSmsCode/",
-                                params={
-                                    "apiKey": VAK_KEY,
-                                    "idNum": id,
-                                    "all": ""
-                                }).json()
-        code = response.get("smsCode")
-        if code is not None:
-            if len(code) > 6:
-                code = code[-4:]
-        else:
+        response = requests.get(f"https://5sim.net/v1/user/check/{id}",
+                                headers=HEADERS).json()
+        try:
+            print("code_json " + str(response))
+            code = response.get("sms")[-1].get("code")
+        except Exception:
+            code = None
+        if code is None:
             time.sleep(50)
             return get_key(id, attempt + 1)
-    except Exception :
+    except Exception:
         time.sleep(1)
         print("can not get code")
     completed_phone(id)
+    print("KEY: " + str(code))
     return code
 
 
 def completed_phone(id):
     try:
-        requests.get("https://vak-sms.com/api/setStatus/",
-                     params={
-                         "apiKey": VAK_KEY,
-                         "idNum": id,
-                         "status": "end"
-                     })
+        requests.get(f"https://5sim.net/v1/user/cancel/{id}",
+                     headers=HEADERS).json()
     except Exception:
         pass
     try:
-        requests.get("https://vak-sms.com/api/setStatus/",
-                     params={
-                         "apiKey": VAK_KEY,
-                         "idNum": id,
-                         "status": "end"
-                     })
+        requests.get(f"https://5sim.net/v1/user/finish/{id}",
+                     headers=HEADERS).json()
     except Exception:
         pass
