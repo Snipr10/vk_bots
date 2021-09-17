@@ -1,6 +1,7 @@
 import asyncio
 
 from login_vk import vk_account
+from sms import get_balance
 from utils import update_proxy
 
 
@@ -9,6 +10,10 @@ if __name__ == '__main__':
     is_next = True
     while is_next:
         try:
+            balance = get_balance()
+            if balance < 12:
+                is_next = False
+                break
             if len(proxy) == 0:
                 proxy += update_proxy()
             loop = asyncio.new_event_loop()
