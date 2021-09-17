@@ -1,4 +1,3 @@
-
 import asyncio
 
 from login_vk import vk_account
@@ -7,8 +6,8 @@ from utils import update_proxy
 
 if __name__ == '__main__':
     proxy = []
-
-    while True:
+    is_next = True
+    while is_next:
         try:
             if len(proxy) == 0:
                 proxy += update_proxy()

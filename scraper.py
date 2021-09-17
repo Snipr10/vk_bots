@@ -4,9 +4,8 @@ import random
 
 from pyppeteer import launch
 
+from chromium import set_chromium_version
 from utils import DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_TIMEOUT
-
-logger = logging.getLogger(__name__)
 
 
 class BrowserManager:
@@ -17,6 +16,7 @@ class BrowserManager:
         self.params = kargs
 
     async def __aenter__(self):
+        set_chromium_version("839847")
         headless = os.getenv('HEADLESS', 'true').lower() == 'true'
         self.browser = await launch(headless=headless,
                                     handleSIGINT=False,

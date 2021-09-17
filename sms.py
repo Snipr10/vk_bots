@@ -1,28 +1,22 @@
 import time
 
-import httpx
-from onlinesimru import GetNumbers
+import requests
 
-from utils import ONLIM_SMS_KEY
-
-
-numbers = GetNumbers(ONLIM_SMS_KEY)
+from utils import VAK_KEY
 
 
-def get_number(attempt=0):
+def get_number():
     try:
-        response = httpx.post("http://onlinesim.ru/api/getNum.php",
-                              params={
-                                  "apikey": ONLIM_SMS_KEY,
-                                  "service": "vkcom",
-                                  "number": True,
-                                  "country": 7,
-                                  "extension": False,
-                                  "operator": "rostelecom"
-                              }).json()
+        response = requests.get("https://vak-sms.com/api/getNumber/",
+                                params={
+                                    "apiKey": VAK_KEY,
+                                    "service": "vk",
+                                    "country": "ru",
+                                    "operator": "rostelecom"
+                                }).json()
         print(response)
-        id = response["tzid"]
-        phone = response["number"]
+        id = response["idNum"]
+        phone = str(response["tel"])
     except Exception as e:
         try:
             print(response['response'])
@@ -35,17 +29,36 @@ def get_number(attempt=0):
     return phone, id
 
 
+def get_balance():
+    response = requests.get("https://vak-sms.com/api/getBalance/",
+                            params={
+                                "apiKey": VAK_KEY,
+                            }).json()
+    balance = response.get("balance")
+    return balance
+
+
 def get_key(id, attempt=0):
     code = None
     try:
-        code = numbers.wait_code(id, timeout=60*3)
-        if len(code) > 6:
-            code = code[-4:]
-    except Exception as e:
-        time.sleep(60*2)
-
-        # if attempt < 5:
-        #     return get_key(id, attempt=attempt + 1)
+        if attempt > 6:
+            completed_phone(id)
+            return None
+        response = requests.get("https://vak-sms.com/api/getSmsCode/",
+                                params={
+                                    "apiKey": VAK_KEY,
+                                    "idNum": id,
+                                    "all": ""
+                                }).json()
+        code = response.get("smsCode")
+        if code is not None:
+            if len(code) > 6:
+                code = code[-4:]
+        else:
+            time.sleep(50)
+            return get_key(id, attempt + 1)
+    except Exception :
+        time.sleep(1)
         print("can not get code")
     completed_phone(id)
     return code
@@ -53,6 +66,20 @@ def get_key(id, attempt=0):
 
 def completed_phone(id):
     try:
-        numbers.close(id)
-    except Exception as e:
+        requests.get("https://vak-sms.com/api/setStatus/",
+                     params={
+                         "apiKey": VAK_KEY,
+                         "idNum": id,
+                         "status": "end"
+                     })
+    except Exception:
+        pass
+    try:
+        requests.get("https://vak-sms.com/api/setStatus/",
+                     params={
+                         "apiKey": VAK_KEY,
+                         "idNum": id,
+                         "status": "end"
+                     })
+    except Exception:
         pass

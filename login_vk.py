@@ -33,7 +33,7 @@ async def vk_account(proxy=None):
         )
 
         await page.setUserAgent(user_agent.get("userAgentData"))
-        #GET cookies
+        # GET cookies
         try:
             await asyncio.gather(
                 page.goto("https://www.youtube.com/", timeout=NEW_PAGE_TIMEOUT),
@@ -47,14 +47,13 @@ async def vk_account(proxy=None):
         await page.goto(URL_JOIN, timeout=NEW_PAGE_TIMEOUT)
 
         first_name, last_name, sex = get_name_sex()
-        #USERNAME
+        # USERNAME
         first_name_el = await page.waitForSelector("[name='first_name']", timeout=DEFAULT_TIMEOUT)
         await first_name_el.type(first_name)
 
-        #PASSWORD
+        # PASSWORD
         last_name_el = await page.waitForSelector("[name='last_name']", timeout=DEFAULT_TIMEOUT)
         await last_name_el.type(last_name)
-
 
         # DATE BORN
         born_date = datetime.date.today() - datetime.timedelta(
@@ -72,7 +71,7 @@ async def vk_account(proxy=None):
         await date_el[0].type(str(day))
         await page.keyboard.press('Enter')
 
-        await asyncio.sleep(2*DEFAULT_SLEEP_WAIT)
+        await asyncio.sleep(2 * DEFAULT_SLEEP_WAIT)
         await date_el[1].type("И")
         for i in range(month):
             await asyncio.sleep(DEFAULT_SLEEP_WAIT)
@@ -84,7 +83,7 @@ async def vk_account(proxy=None):
         await asyncio.sleep(DEFAULT_SLEEP_WAIT)
         await page.keyboard.press('Enter')
 
-        await asyncio.sleep(2*DEFAULT_SLEEP_WAIT)
+        await asyncio.sleep(2 * DEFAULT_SLEEP_WAIT)
 
         await date_el[2].type(str(year))
         await page.keyboard.press('Enter')
@@ -92,7 +91,7 @@ async def vk_account(proxy=None):
 
         await page.click("[class='FlatButton__content']", timeout=DEFAULT_TIMEOUT)
 
-        #SEX
+        # SEX
         try:
             sex_radio = await page.waitForSelector(f'[data-sex="{sex}"]', timeout=DEFAULT_TIMEOUT)
             await sex_radio.click()
@@ -101,18 +100,20 @@ async def vk_account(proxy=None):
         except Exception:
             pass
 
-        #PHONE
+        phone_el = await page.waitForSelector("#join_phone", timeout=DEFAULT_TIMEOUT)
+
+        # PHONE
         phone_number, id = get_number()
         if not phone_number:
             print("CAN NOT GET PHONE")
             return
-        phone_el = await page.waitForSelector("#join_phone", timeout=DEFAULT_TIMEOUT)
-        await phone_el.type(phone_number.replace("+7", ""))
+
+        await phone_el.type(phone_number[1:].replace("+7", ""))
 
         await page.click("#join_send_phone", timeout=DEFAULT_TIMEOUT)
         await page.waitForSelector("#join_code", timeout=DEFAULT_TIMEOUT)
 
-        #CODE SMS
+        # CODE SMS
         code = get_key(id)
         print("SMS")
         print(code)
@@ -126,15 +127,15 @@ async def vk_account(proxy=None):
         await page.click("#join_send_code", timeout=DEFAULT_TIMEOUT)
 
         print("PASSWORD")
-        #PASSWORD
-        await asyncio.sleep(3*DEFAULT_SLEEP_WAIT)
+        # PASSWORD
+        await asyncio.sleep(3 * DEFAULT_SLEEP_WAIT)
 
         pass_el = await page.waitForSelector("#join_pass", timeout=DEFAULT_TIMEOUT)
         password = get_pass()
         await pass_el.type(password)
         await page.click("#join_send_pass", timeout=DEFAULT_TIMEOUT)
 
-        #SUCCES
+        # SUCCESS
         try:
             await asyncio.sleep(5 * DEFAULT_SLEEP_WAIT)
 
@@ -144,17 +145,16 @@ async def vk_account(proxy=None):
 
         try:
             try:
-
-                #country russia
-                await asyncio.sleep(2*DEFAULT_SLEEP_WAIT)
+                # country russia
+                await asyncio.sleep(2 * DEFAULT_SLEEP_WAIT)
                 country = await page.waitForSelector("[class='selector_input selected']", timeout=DEFAULT_TIMEOUT)
                 await country.type("Р")
 
                 await page.keyboard.press('ArrowDown')
                 await page.keyboard.press('Enter')
 
-                #CITY
-                await asyncio.sleep(4*DEFAULT_SLEEP_WAIT)
+                # CITY
+                await asyncio.sleep(4 * DEFAULT_SLEEP_WAIT)
                 city_el = await page.querySelectorAll("[class='selector_input']")
                 city = random.randint(1, 1)
                 await city_el[-1].type("Mосква")
@@ -167,7 +167,7 @@ async def vk_account(proxy=None):
                     pass
 
                 # UNIVER
-                await asyncio.sleep(10*DEFAULT_SLEEP_WAIT)
+                await asyncio.sleep(10 * DEFAULT_SLEEP_WAIT)
                 univer_el = await page.querySelectorAll("[class='selector_input']")
                 univer = random.randint(1, 6)
                 await univer_el[-1].type("M")
@@ -179,12 +179,12 @@ async def vk_account(proxy=None):
                 except Exception:
                     pass
 
-                await asyncio.sleep(10*DEFAULT_SLEEP_WAIT)
+                await asyncio.sleep(10 * DEFAULT_SLEEP_WAIT)
                 try:
                     univer_data_el = await page.querySelectorAll("[class='selector_input']")
                     for i in range(1, 5):
                         await asyncio.sleep(2 * DEFAULT_SLEEP_WAIT)
-                        await univer_data_el[-1*i].type("")
+                        await univer_data_el[-1 * i].type("")
                         for i in range(1, 7):
                             await page.keyboard.press('ArrowDown')
                         await page.keyboard.press('Enter')
@@ -196,10 +196,10 @@ async def vk_account(proxy=None):
             except Exception:
                 await page.click("[class='join_skip_link']", timeout=DEFAULT_TIMEOUT)
 
-            #EMAIL
+            # EMAIL
             try:
-                #TODO without
-                await asyncio.sleep(5*DEFAULT_SLEEP_WAIT)
+                # TODO without
+                await asyncio.sleep(5 * DEFAULT_SLEEP_WAIT)
 
                 await page.click("#join_save", timeout=DEFAULT_TIMEOUT)
             except Exception:
