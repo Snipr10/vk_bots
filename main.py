@@ -1,4 +1,5 @@
 import asyncio
+import random
 
 from login_vk import vk_account
 from sms import get_balance
@@ -16,6 +17,8 @@ if __name__ == '__main__':
                 break
             if len(proxy) == 0:
                 proxy += update_proxy()
+                random.shuffle(proxy)
+
             loop = asyncio.new_event_loop()
 
             result = loop.run_until_complete(asyncio.wait_for(vk_account(proxy.pop().split(":")), 300_000))

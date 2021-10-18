@@ -10,8 +10,7 @@ from sms import get_number, get_key
 from utils import TEXT_WIDTH, TEXT_HEIGHT, DEFAULT_TIMEOUT, get_name_sex, DEFAULT_SLEEP_WAIT, get_pass, \
     user_agents, NEW_PAGE_TIMEOUT, PASSWORD_GLASSEN, USERNAME_GLASSEN, save_bot
 
-# URL_JOIN = "https://vk.com/join"
-URL_JOIN = "https://vk.com/join"
+URL_JOIN = "https://connect.vk.com/auth?app_id=7913379&v=0.0.2&redirect_uri=https%3A%2F%2Fvk.com%2Fjoin&uuid=lMJYMhwBNzoX2WJrA431I&app_settings=eyJleHRlcm5hbF9kZXZpY2VfaWQiOi00Mjg4Njg3MzAsInZrY19hdXRoX2FjdGlvbiI6InJlZ2lzdHJhdGlvbiIsInByb21vIjoicmVnaXN0cmF0aW9uIn0%3D"
 
 GLASSEN_LOGIN_URL = "https://api.glassen-it.com/"
 VK_BOT_URL = "https://api.glassen-it.com/component/socparser/bot/vkbotstart"
@@ -32,41 +31,42 @@ DISABLED_EVASIONS_LIST = ['chrome_app',
 
 
 async def vk_account(proxy=None):
-    print(proxy)
     async with BrowserManager(proxy) as browser_manager:
 
         browser = browser_manager.browser
         page = await browser.newPage()
-        await page._client.send('Network.setCookies', {
-            'cookies': generate_cookie(),
-        })
 
         await page.authenticate({'username': proxy[2], 'password': proxy[3]})
         user_agent = random.choice(user_agents)
-
-        await page.setViewport(
-            {
-                TEXT_WIDTH: user_agent.get(TEXT_WIDTH),
-                TEXT_HEIGHT: user_agent.get(TEXT_HEIGHT)
-            }
-        )
-
         await page.setUserAgent(user_agent.get("userAgentData"))
-        # GET cookies
         disabled_evasions_sample = random.sample(DISABLED_EVASIONS_LIST, random.randint(0, len(DISABLED_EVASIONS_LIST)))
-        # await stealth(page, disabled_evasions_sample)
+        await stealth(page, disabled_evasions_sample)
 
-        try:
-            await asyncio.gather(
-                page.goto("https://www.youtube.com/", timeout=NEW_PAGE_TIMEOUT),
-                page.goto("https://www.amazon.com/", timeout=NEW_PAGE_TIMEOUT),
-                page.goto("https://www.avito.ru/", timeout=NEW_PAGE_TIMEOUT),
-                page.goto("https://translate.google.com/?hl=ru", timeout=NEW_PAGE_TIMEOUT),
-                page.goto("https://www.instagram.com/?hl=ru", timeout=NEW_PAGE_TIMEOUT)
-            )
-        except Exception:
-            pass
         await page.goto(URL_JOIN, timeout=NEW_PAGE_TIMEOUT)
+
+        phone_el = await page.waitForSelector("[name='phone']", timeout=DEFAULT_TIMEOUT)
+
+        await page.waitForSelector("[class='vkc__Button__title']", timeout=DEFAULT_TIMEOUT)
+        # PHONE
+        phone_number, id = get_number()
+        if not phone_number:
+            print("CAN NOT GET PHONE")
+            return
+
+        await phone_el.type(phone_number[1:].replace("+7", ""))
+
+        await page.click("[class='vkc__Button__title']", timeout=DEFAULT_TIMEOUT)
+
+        code = get_key(id)
+        print("SMS")
+        print(code)
+
+        phone_code_el = await page.waitForSelector("#token", timeout=DEFAULT_TIMEOUT)
+        await asyncio.sleep(DEFAULT_SLEEP_WAIT)
+        await phone_code_el.type(code)
+        await asyncio.sleep(DEFAULT_SLEEP_WAIT)
+        await page.waitForSelector("[class='vkc__Button__title']", timeout=DEFAULT_TIMEOUT)
+        await page.click("[class='vkc__Button__title']", timeout=DEFAULT_TIMEOUT)
 
         first_name, last_name, sex = get_name_sex()
         # USERNAME
@@ -124,6 +124,7 @@ async def vk_account(proxy=None):
 
         phone_el = await page.waitForSelector("#join_phone", timeout=DEFAULT_TIMEOUT)
 
+        await page.waitForSelector("#join_code", timeout=DEFAULT_TIMEOUT)
         # PHONE
         phone_number, id = get_number()
         if not phone_number:
@@ -133,7 +134,6 @@ async def vk_account(proxy=None):
         await phone_el.type(phone_number[1:].replace("+7", ""))
 
         await page.click("#join_send_phone", timeout=DEFAULT_TIMEOUT)
-        await page.waitForSelector("#join_code", timeout=DEFAULT_TIMEOUT)
 
         # CODE SMS
         code = get_key(id)

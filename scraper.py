@@ -16,12 +16,14 @@ class BrowserManager:
         self.params = kargs
 
     async def __aenter__(self):
-        set_chromium_version("839847")
+        # set_chromium_version("839847")
         headless = os.getenv('HEADLESS', 'true').lower() == 'true'
         self.browser = await launch(headless=headless,
                                     handleSIGINT=False,
                                     handleSIGTERM=False,
                                     handleSIGHUP=False,
+                                    ignoreDefaultArgs=["--disable-extensions", "--enable-automation"],
+                                    defaultViewport=None,
                                     args=[
                                         "--no-sandbox",
                                         f"--window-size={DEFAULT_WIDTH},{DEFAULT_HEIGHT}",
